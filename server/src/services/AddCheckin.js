@@ -7,11 +7,14 @@ const AddCheckin = async (req, res) => {
 	const inputId = resource.id;
 	const inputGate = resource.gate;
 	let STATUS = {};
-
+	if(!inputId || !inputName)
+	return res.status(404).json("Invalid ID, please enter name or id");
 	if (isNaN(inputId))
-		return res.status(200).json("Invalid ID, please enter a number");
+		return res.status(404).json("Invalid ID, please enter a number");
 	if (!(inputGate in Gate))
-		return res.status(200).json(`Invalid gates, please enter one of these gates: ${Object.getOwnPropertyNames(Gate)}`);
+		return res.status(404).json(`Invalid gates, please enter one of these gates: ${Object.getOwnPropertyNames(Gate)}`);
+	
+	console.log("Accepted input");
 	
 	
 		//Check if the staff is already on the database or not

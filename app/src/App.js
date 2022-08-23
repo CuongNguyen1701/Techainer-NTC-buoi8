@@ -1,15 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import checkinApi from "./api/checkinApi";
 function App() {
 	const [name, setName] = useState("");
 	const [id, setId] = useState("");
 	const [gate, setGate] = useState("GATE1");
-	const [checkin, setCheckin] = useState({
-		name: "",
-		id: "",
-		gate: "GATE1",
-	});
+	const [history, setHistory] = useState([]);
+	const [checkin, setCheckin] = useState({});
 
 	const addCheckin = async (name, id, gate) => {
 		const newCheckin = {
@@ -18,13 +15,15 @@ function App() {
 			gate: gate,
 		};
 		try {
+			console.log(newCheckin);
+			const response = await checkinApi.post("/checkin", newCheckin);
 			setCheckin(newCheckin);
-			const response = await checkinApi.post("/checkin", checkin);
-			console.log("posted checkin" + response );
+			console.log(response.data);
 		} catch (err) {
 			console.log(err);
 		}
 	};
+
 	//Handles submit events
 	const handleSubmit = e => {
 		e.preventDefault();
@@ -36,12 +35,31 @@ function App() {
 		} catch (err) {
 			console.log(err);
 		}
-		// setName("");
-		// setId("");
-		// setGate("");
+		setName("");
+		setId("");
+		setGate("");
 	};
+
+	//get history
+	useEffect(() => {
+		const fetchHistory = async () => {
+			try {
+				const response = await checkinApi.get("/history"); //get history
+				setHistory(response.data.reverse());
+			} catch (err) {
+				if (!err.response) return console.log(`Error: ${err.message}`);
+				console.log(err.response.data);
+				console.log(err.response.status);
+				console.log(err.response.headers);
+			}
+		};
+		fetchHistory();
+		return () => {};
+	}, [checkin]);
+
 	return (
 		<div className="container">
+			{/* get checkin data using a form  */}
 			<form className="add-form" onSubmit={handleSubmit}>
 				<div className="form-control">
 					<label>Enter Employee's name:</label>
@@ -72,6 +90,19 @@ function App() {
 				</div>
 				<input type="submit" value="Check-in" className="btn btn-block" />
 			</form>
+			<div>
+				{history.map(e => (
+					<div className="tab">
+						<h3>
+							No.{e.id}: {e.staff.name}
+						</h3>
+						<h4>Staff's ID: {e.staffId}</h4>
+						<p>Checkin: {Date(e.checkIn.slice(0,-1))}</p>
+						<p>Gate: {e.Gate}</p>
+						<p>Checkout: {e.checkOut || "N/A"}</p>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }
